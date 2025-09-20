@@ -1,6 +1,7 @@
+
 import { db } from '@/lib/firebase';
 import * as geofirestore from 'geofirestore';
-import { collection, GeoPoint } from 'firebase/firestore';
+import type { GeoPoint } from 'firebase/firestore';
 
 export interface Pharmacy {
     id: string;

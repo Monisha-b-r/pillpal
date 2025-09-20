@@ -5,7 +5,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { MapPin, Globe, Loader2, AlertTriangle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { getNearbyPharmacies, Pharmacy } from '@/services/pharmacy-service';
+import { getNearbyPharmacies } from '@/services/pharmacy-service';
+import type { Pharmacy } from '@/services/pharmacy-service';
 
 const onlineOptions = [
     { name: 'Capsule' },
