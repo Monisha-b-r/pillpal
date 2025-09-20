@@ -23,6 +23,7 @@ export type PillIdentificationInput = z.infer<typeof PillIdentificationInputSche
 
 const PillIdentificationOutputSchema = z.object({
   medicineName: z.string().describe('The identified name of the medicine.'),
+  usage: z.string().describe('A brief description of what the medicine is used for.'),
   isNewMedicine: z.boolean().describe('Whether this medicine is new to the inventory or not.'),
 });
 export type PillIdentificationOutput = z.infer<typeof PillIdentificationOutputSchema>;
@@ -37,7 +38,7 @@ const pillIdentificationPrompt = ai.definePrompt({
   output: {schema: PillIdentificationOutputSchema},
   prompt: `You are a helpful assistant specialized in identifying medicine packages from images.
 
-  Analyze the image and extract the medicine name. If you cannot identify the medicine, return an empty string for medicineName.
+  Analyze the image and extract the medicine name and a brief, one-sentence description of its primary use. If you cannot identify the medicine, return an empty string for medicineName and usage.
 
   Also determine if the medicine is new to the inventory based on the existingMedicines list.
 
@@ -57,6 +58,7 @@ const identifyPillFlow = ai.defineFlow(
     const isNew = !input.existingMedicines?.includes(output!.medicineName);
     return {
       medicineName: output!.medicineName,
+      usage: output!.usage,
       isNewMedicine: isNew,
     };
   }

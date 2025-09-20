@@ -1,25 +1,23 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogClose } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useMedicineStore } from '@/hooks/use-medicine-store';
-import { analyzePrescription, PrescriptionAnalysisOutput } from '@/ai/flows/prescription-analysis';
+import { analyzePrescription, AnalyzePrescriptionOutput } from '@/ai/flows/prescription-analysis';
 import { identifyPill } from '@/ai/flows/pill-identification';
 import { UploadCloud, ScanLine, Loader2 } from 'lucide-react';
 
 const Actions = () => {
+  const router = useRouter();
   const { toast } = useToast();
-  const { addFromPrescription, addStock, medicines } = useMedicineStore();
+  const { addFromPrescription, medicines } = useMedicineStore();
   const [isLoading, setIsLoading] = useState<'prescription' | 'scan' | null>(null);
 
-  const [prescriptionResult, setPrescriptionResult] = useState<PrescriptionAnalysisOutput['medicines'] | null>(null);
-  const [scanResult, setScanResult] = useState<{ medicineName: string; isNewMedicine: boolean } | null>(null);
-  const [stockAmount, setStockAmount] = useState<number>(30);
+  const [prescriptionResult, setPrescriptionResult] = useState<AnalyzePrescriptionOutput['medicines'] | null>(null);
   
   const prescriptionInputRef = useRef<HTMLInputElement>(null);
   const scanInputRef = useRef<HTMLInputElement>(null);
@@ -42,7 +40,21 @@ const Actions = () => {
             photoDataUri: dataUri,
             existingMedicines: medicines.map(m => m.name),
           });
-          setScanResult(result);
+
+          if (result.medicineName) {
+            const query = new URLSearchParams({
+              name: result.medicineName,
+              usage: result.usage,
+              isNew: String(result.isNewMedicine),
+            }).toString();
+            router.push(`/medicine-info?${query}`);
+          } else {
+            toast({
+              variant: 'destructive',
+              title: 'Identification Failed',
+              description: 'Could not identify the medicine from the image.',
+            });
+          }
         }
       } catch (error) {
         console.error(`Error during ${type} processing:`, error);
@@ -76,25 +88,6 @@ const Actions = () => {
         description: 'New medicines have been added to your inventory.',
       });
       setPrescriptionResult(null);
-    }
-  };
-
-  const confirmScan = () => {
-    if (scanResult) {
-      const success = addStock(scanResult.medicineName, stockAmount);
-      if (success) {
-        toast({
-          title: 'Inventory Updated',
-          description: `${stockAmount} units of ${scanResult.medicineName} added.`,
-        });
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Update Failed',
-          description: `Could not find ${scanResult.medicineName} in your inventory. Add it from a prescription first.`,
-        });
-      }
-      setScanResult(null);
     }
   };
 
@@ -171,38 +164,6 @@ const Actions = () => {
               <Button variant="outline">Cancel</Button>
             </DialogClose>
             <Button onClick={confirmPrescription}>Confirm</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Scan Result Dialog */}
-      <Dialog open={!!scanResult} onOpenChange={() => setScanResult(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Pill Identification</DialogTitle>
-            <DialogDescription>
-              {scanResult?.isNewMedicine && <p className="text-destructive font-semibold mb-2">This appears to be a new medicine.</p>}
-              We identified this medicine. How many units would you like to add to your inventory?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="font-bold text-lg text-center p-4 bg-secondary rounded-md">{scanResult?.medicineName}</p>
-            <div className="grid grid-cols-3 items-center gap-4">
-              <Label htmlFor="stock-amount" className="text-right">Quantity</Label>
-              <Input
-                id="stock-amount"
-                type="number"
-                value={stockAmount}
-                onChange={(e) => setStockAmount(parseInt(e.target.value, 10) || 0)}
-                className="col-span-2"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button onClick={confirmScan}>Add to Inventory</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
