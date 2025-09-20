@@ -28,7 +28,7 @@ const onlineOptions = [
 
 // Haversine formula to calculate distance
 const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-  const R = 3959; // Radius of the earth in miles
+  const R = 6371; // Radius of the earth in km
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a =
@@ -36,7 +36,7 @@ const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => 
     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const d = R * c; // Distance in miles
+  const d = R * c; // Distance in km
   return d;
 };
 
@@ -55,12 +55,18 @@ const PharmacyFinder = () => {
           const location = { lat: latitude, lng: longitude };
           setUserLocation(location);
 
-          const pharmaciesWithDistance = allPharmacies.map(p => ({
-            ...p,
-            distance: getDistance(location.lat, location.lng, p.lat, p.lng).toFixed(1),
-          }))
-          .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))
-          .map(p => ({...p, distance: `${p.distance} miles away`}));
+          const pharmaciesWithDistance = allPharmacies
+          .map(p => {
+            const distanceInKm = getDistance(location.lat, location.lng, p.lat, p.lng);
+            return {
+              ...p,
+              distance: distanceInKm.toFixed(1),
+              distanceKm: distanceInKm,
+            };
+          })
+          .filter(p => p.distanceKm <= 3) // Filter for pharmacies within 3km
+          .sort((a, b) => a.distanceKm - b.distanceKm)
+          .map(p => ({...p, distance: `${p.distance} km away`}));
 
           setPharmacies(pharmaciesWithDistance);
           setLoading(false);
