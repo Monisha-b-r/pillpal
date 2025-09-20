@@ -24,6 +24,7 @@ export type PillIdentificationInput = z.infer<typeof PillIdentificationInputSche
 const PillIdentificationOutputSchema = z.object({
   medicineName: z.string().describe('The identified name of the medicine.'),
   usage: z.string().describe('A brief description of what the medicine is used for.'),
+  sideEffects: z.string().describe('Common side effects of the medicine.'),
   isNewMedicine: z.boolean().describe('Whether this medicine is new to the inventory or not.'),
 });
 export type PillIdentificationOutput = z.infer<typeof PillIdentificationOutputSchema>;
@@ -34,7 +35,7 @@ const identifyPillPrompt = ai.definePrompt({
   output: {schema: PillIdentificationOutputSchema},
   prompt: `You are a helpful assistant specialized in identifying medicine packages from images.
 
-Analyze the image to extract the medicine's brand name and a brief, one-sentence description of its primary use. If you cannot identify the medicine, return an empty string for both medicineName and usage.
+Analyze the image to extract the medicine's brand name, a brief, one-sentence description of its primary use, and a list of its common side effects. If you cannot identify the medicine, return an empty string for all fields.
 
 Based on the user's list of existing medicines, determine if the scanned medicine is new. A medicine is considered new if its name is not in the 'existingMedicines' list. Set the 'isNewMedicine' field to true if it is new, and false otherwise.
 

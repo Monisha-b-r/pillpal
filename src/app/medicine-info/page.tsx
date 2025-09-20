@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { useMedicineStore } from '@/hooks/use-medicine-store';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { Pill, Info, PackagePlus, AlertTriangle } from 'lucide-react';
+import { Pill, Info, PackagePlus, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 const MedicineInfoContent = () => {
   const router = useRouter();
@@ -21,6 +21,7 @@ const MedicineInfoContent = () => {
 
   const medicineName = searchParams.get('name') || 'Unknown Medicine';
   const usage = searchParams.get('usage') || 'No usage information available.';
+  const sideEffects = searchParams.get('sideEffects') || 'No side effect information available.';
   const isNew = searchParams.get('isNew') === 'true';
 
   const [stockAmount, setStockAmount] = useState<number>(30);
@@ -68,6 +69,13 @@ const MedicineInfoContent = () => {
               <div>
                 <h3 className="font-semibold">Usage</h3>
                 <p className="text-muted-foreground">{usage}</p>
+              </div>
+            </div>
+             <div className="flex items-start">
+              <ShieldAlert className="mr-3 mt-1 h-5 w-5 text-muted-foreground flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold">Common Side Effects</h3>
+                <p className="text-muted-foreground">{sideEffects}</p>
               </div>
             </div>
             <div className="space-y-2">

@@ -45,6 +45,7 @@ const Actions = () => {
             const query = new URLSearchParams({
               name: result.medicineName,
               usage: result.usage,
+              sideEffects: result.sideEffects,
               isNew: String(result.isNewMedicine),
             }).toString();
             router.push(`/medicine-info?${query}`);
