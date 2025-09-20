@@ -15,8 +15,8 @@ const Header = () => {
             </h1>
           </Link>
           <div className="flex items-center gap-2">
-            <Link href="/inventory" legacyBehavior passHref>
-              <Button variant="ghost" size="icon" aria-label="My Medicines">
+            <Link href="/inventory" aria-label="My Medicines">
+              <Button variant="ghost" size="icon" asChild>
                 <Package className="h-6 w-6" />
               </Button>
             </Link>
