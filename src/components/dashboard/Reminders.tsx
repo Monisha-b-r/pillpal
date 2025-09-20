@@ -52,7 +52,7 @@ const TimeSlot = ({
               className={cn(
                 'flex items-center gap-4 p-3 rounded-lg transition-all duration-500 relative overflow-hidden',
                 {
-                  'bg-secondary': !isTaken,
+                  'bg-secondary': !isTaken || isJustTaken,
                   'bg-green-100 dark:bg-green-900/30': isJustTaken,
                   'opacity-0': isTaken && !isJustTaken,
                 }
@@ -83,7 +83,7 @@ const TimeSlot = ({
                     <label
                       htmlFor={reminder.id}
                       className={cn('font-semibold text-base', {
-                        'line-through': isTaken,
+                        'line-through text-muted-foreground': isTaken,
                       })}
                     >
                       {reminder.medicineName}
