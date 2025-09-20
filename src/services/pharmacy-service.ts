@@ -1,7 +1,6 @@
 
 import { db } from '@/lib/firebase';
-import * as geofirestore from 'geofirestore';
-import type { GeoPoint } from 'firebase/firestore';
+import { collection, getDocs, GeoPoint } from 'firebase/firestore';
 
 export interface Pharmacy {
     id: string;
@@ -10,32 +9,54 @@ export interface Pharmacy {
     coordinates: GeoPoint;
 }
 
-const GeoFirestore = geofirestore.initializeApp(db);
-
-const pharmaciesCollection = GeoFirestore.collection('pharmacies');
+// Haversine formula to calculate distance between two points on Earth
+const getDistance = (
+    coord1: { latitude: number; longitude: number },
+    coord2: { latitude: number; longitude: number }
+): number => {
+    const R = 6371; // Radius of the Earth in km
+    const dLat = (coord2.latitude - coord1.latitude) * (Math.PI / 180);
+    const dLon = (coord2.longitude - coord1.longitude) * (Math.PI / 180);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(coord1.latitude * (Math.PI / 180)) *
+        Math.cos(coord2.latitude * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+};
 
 export async function getNearbyPharmacies(
   center: { latitude: number; longitude: number },
   radius: number // in km
 ): Promise<Pharmacy[]> {
     try {
-        const query = pharmaciesCollection.near({ center, radius });
+        const pharmaciesCollection = collection(db, 'pharmacies');
+        const snapshot = await getDocs(pharmaciesCollection);
 
-        const snapshot = await query.get();
-
-        // Note: The geofirestore library on its own returns documents with distance in km.
-        // The documents also have `g` (geohash) and `l` (GeoPoint) fields.
-        const pharmacies = snapshot.docs.map(doc => {
+        const pharmacies: Pharmacy[] = [];
+        snapshot.forEach(doc => {
             const data = doc.data();
-            return {
-                id: doc.id,
-                name: data.name,
-                distance: doc.distance,
-                coordinates: data.l as GeoPoint // 'l' is the default GeoPoint field for geofirestore
-            } as Pharmacy;
+            const pharmacyCoords = data.coordinates as GeoPoint;
+            
+            const distance = getDistance(center, {
+                latitude: pharmacyCoords.latitude,
+                longitude: pharmacyCoords.longitude
+            });
+
+            if (distance <= radius) {
+                pharmacies.push({
+                    id: doc.id,
+                    name: data.name,
+                    distance: distance,
+                    coordinates: pharmacyCoords
+                } as Pharmacy);
+            }
         });
 
-        return pharmacies;
+        // Sort by distance, closest first
+        return pharmacies.sort((a, b) => a.distance - b.distance);
 
     } catch(error) {
         console.error("Error getting nearby pharmacies: ", error);
