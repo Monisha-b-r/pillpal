@@ -2,7 +2,6 @@
 
 import Header from '@/components/layout/Header';
 import Reminders from '@/components/dashboard/Reminders';
-import Inventory from '@/components/dashboard/Inventory';
 import Actions from '@/components/dashboard/Actions';
 import PharmacyFinder from '@/components/dashboard/PharmacyFinder';
 
@@ -17,7 +16,6 @@ export default function Home() {
             <Reminders />
           </div>
           <div className="flex flex-col gap-6">
-            <Inventory />
             <PharmacyFinder />
           </div>
         </div>
