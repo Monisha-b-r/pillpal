@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import PillPalLogo from '@/components/icons/PillPalLogo';
-import { Package } from 'lucide-react';
+import { Package, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -8,6 +8,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+import type { StockStatus } from '@/lib/types';
+
+
+const statusConfig: {
+  [key in StockStatus]: { color: string; label: string };
+} = {
+  high: { color: 'text-green-500', label: 'In Stock (> 15 doses)' },
+  medium: { color: 'text-yellow-500', label: 'Low Stock (8-15 doses)' },
+  low: { color: 'text-orange-500', label: 'Very Low (1-7 doses)' },
+  empty: { color: 'text-red-500', label: 'Out of Stock' },
+};
+
 
 const Header = () => {
   return (
@@ -30,8 +43,22 @@ const Header = () => {
                     </Button>
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>My Medicines</p>
+                <TooltipContent side="bottom" className="w-60">
+                   <div>
+                    <h4 className="font-semibold mb-2">My Medicines</h4>
+                    <p className='text-xs text-muted-foreground mb-3'>Click to view your inventory. Below is a guide to the stock status colors.</p>
+                    <ul className="space-y-2">
+                      {Object.entries(statusConfig).map(([key, value]) => (
+                        <li key={key} className="flex items-center">
+                          <Circle className={cn('h-2.5 w-2.5 fill-current mr-2', value.color)} />
+                          <div>
+                            <span className={cn('font-medium text-xs', value.color)}>{value.label.split(' (')[0]}</span>
+                            <p className="text-xs text-muted-foreground">{value.label.includes('(') ? `(${value.label.split(' (')[1]}` : ''}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                   </div>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

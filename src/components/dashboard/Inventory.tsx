@@ -12,10 +12,9 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useMedicineStore } from '@/hooks/use-medicine-store';
-import { Circle, Package, PackageOpen, Info, PlusCircle } from 'lucide-react';
+import { Circle, Package, PackageOpen, PlusCircle } from 'lucide-react';
 import type { StockStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -67,24 +66,6 @@ const Inventory = () => {
           <Package className="text-primary" />
           <span>My Medicines</span>
         </div>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-6 w-6">
-              <Info className="h-4 w-4 text-muted-foreground" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-60 text-sm">
-            <h4 className="font-semibold mb-2">Stock Status Guide</h4>
-            <ul className="space-y-2">
-              {Object.entries(statusConfig).map(([key, value]) => (
-                <li key={key} className="flex items-center">
-                  <Circle className={cn('h-2.5 w-2.5 fill-current mr-2', value.color)} />
-                  <span className={cn('font-medium', value.color)}>{value.label}</span>
-                </li>
-              ))}
-            </ul>
-          </PopoverContent>
-        </Popover>
       </CardTitle>
     </CardHeader>
   );
