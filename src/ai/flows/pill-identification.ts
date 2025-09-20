@@ -28,11 +28,7 @@ const PillIdentificationOutputSchema = z.object({
 });
 export type PillIdentificationOutput = z.infer<typeof PillIdentificationOutputSchema>;
 
-export async function identifyPill(input: PillIdentificationInput): Promise<PillIdentificationOutput> {
-  return identifyPillFlow(input);
-}
-
-const pillIdentificationPrompt = ai.definePrompt({
+const identifyPillPrompt = ai.definePrompt({
   name: 'pillIdentificationPrompt',
   input: {schema: PillIdentificationInputSchema},
   output: {schema: PillIdentificationOutputSchema},
@@ -57,3 +53,7 @@ const identifyPillFlow = ai.defineFlow(
     return output!;
   }
 );
+
+export async function identifyPill(input: PillIdentificationInput): Promise<PillIdentificationOutput> {
+  return identifyPillFlow(input);
+}
