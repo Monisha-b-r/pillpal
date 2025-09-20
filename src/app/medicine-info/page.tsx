@@ -56,7 +56,7 @@ const MedicineInfoContent = () => {
           <CardContent className="space-y-6">
             {isNew && (
               <div className="flex items-start p-3 text-sm text-destructive-foreground bg-destructive/80 rounded-lg">
-                <AlertTriangle className="mr-3 mt-1 h-5 w-5" />
+                <AlertTriangle className="mr-3 mt-1 h-5 w-5 flex-shrink-0" />
                 <div>
                   <p className="font-semibold">New Medicine Detected</p>
                   <p>This medicine is not in your inventory. To add it, please upload a prescription first on the home page.</p>
@@ -64,7 +64,7 @@ const MedicineInfoContent = () => {
               </div>
             )}
             <div className="flex items-start">
-              <Info className="mr-3 mt-1 h-5 w-5 text-muted-foreground" />
+              <Info className="mr-3 mt-1 h-5 w-5 text-muted-foreground flex-shrink-0" />
               <div>
                 <h3 className="font-semibold">Usage</h3>
                 <p className="text-muted-foreground">{usage}</p>

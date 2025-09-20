@@ -38,12 +38,12 @@ const pillIdentificationPrompt = ai.definePrompt({
   output: {schema: PillIdentificationOutputSchema},
   prompt: `You are a helpful assistant specialized in identifying medicine packages from images.
 
-  Analyze the image and extract the medicine name and a brief, one-sentence description of its primary use. If you cannot identify the medicine, return an empty string for medicineName and usage.
+Analyze the image to extract the medicine's brand name and a brief, one-sentence description of its primary use. If you cannot identify the medicine, return an empty string for both medicineName and usage.
 
-  Also determine if the medicine is new to the inventory based on the existingMedicines list.
+Based on the user's list of existing medicines, determine if the scanned medicine is new. A medicine is considered new if its name is not in the 'existingMedicines' list. Set the 'isNewMedicine' field to true if it is new, and false otherwise.
 
-  Image: {{media url=photoDataUri}}
-  Existing Medicines: {{existingMedicines}}`,
+Image: {{media url=photoDataUri}}
+Existing Medicines: {{#if existingMedicines}}{{#each existingMedicines}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}None{{/if}}`,
 });
 
 const identifyPillFlow = ai.defineFlow(
@@ -53,13 +53,7 @@ const identifyPillFlow = ai.defineFlow(
     outputSchema: PillIdentificationOutputSchema,
   },
   async input => {
-    const {output} = await pillIdentificationPrompt(input);
-
-    const isNew = !input.existingMedicines?.includes(output!.medicineName);
-    return {
-      medicineName: output!.medicineName,
-      usage: output!.usage,
-      isNewMedicine: isNew,
-    };
+    const {output} = await identifyPillPrompt(input);
+    return output!;
   }
 );
