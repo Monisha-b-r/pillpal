@@ -64,7 +64,6 @@ const PharmacyFinder = () => {
               distanceKm: distanceInKm,
             };
           })
-          .filter(p => p.distanceKm <= 3) // Filter for pharmacies within 3km
           .sort((a, b) => a.distanceKm - b.distanceKm)
           .map(p => ({...p, distance: `${p.distance} km away`}));
 
