@@ -44,7 +44,7 @@ const TimeSlot = ({
       <div className="space-y-2">
         {sortedReminders.map((reminder) => {
           const isJustTaken = recentlyTakenId === reminder.id;
-          const isTaken = reminder.taken && !isJustTaken;
+          const isTaken = reminder.taken;
 
           return (
             <div
@@ -52,17 +52,17 @@ const TimeSlot = ({
               className={cn(
                 'flex items-center gap-4 p-3 rounded-lg transition-all duration-500 relative overflow-hidden',
                 {
-                  'bg-secondary': !reminder.taken,
+                  'bg-secondary': !isTaken,
                   'bg-green-100 dark:bg-green-900/30': isJustTaken,
-                  'opacity-0': isTaken,
+                  'opacity-0': isTaken && !isJustTaken,
                 }
               )}
               style={{
-                maxHeight: isTaken ? '0' : '100px',
-                paddingTop: isTaken ? '0' : '',
-                paddingBottom: isTaken ? '0' : '',
-                marginBottom: isTaken ? '0' : '',
-                marginTop: isTaken ? '0' : '',
+                maxHeight: isTaken && !isJustTaken ? '0' : '100px',
+                paddingTop: isTaken && !isJustTaken ? '0' : '',
+                paddingBottom: isTaken && !isJustTaken ? '0' : '',
+                marginBottom: isTaken && !isJustTaken ? '0' : '',
+                marginTop: isTaken && !isJustTaken ? '0' : '',
               }}
             >
               {isJustTaken ? (
@@ -74,8 +74,8 @@ const TimeSlot = ({
                 <>
                   <Checkbox
                     id={reminder.id}
-                    checked={reminder.taken}
-                    onCheckedChange={() => !reminder.taken && handleTakeDose(reminder.id)}
+                    checked={isTaken}
+                    onCheckedChange={() => !isTaken && handleTakeDose(reminder.id)}
                     aria-label={`Mark ${reminder.medicineName} as taken`}
                     className="w-6 h-6"
                   />
@@ -83,14 +83,14 @@ const TimeSlot = ({
                     <label
                       htmlFor={reminder.id}
                       className={cn('font-semibold text-base', {
-                        'line-through': reminder.taken,
+                        'line-through': isTaken,
                       })}
                     >
                       {reminder.medicineName}
                     </label>
                     <p className={cn('text-sm flex items-center gap-1.5', {
-                        'text-muted-foreground': !reminder.taken,
-                        'text-muted-foreground/80': reminder.taken,
+                        'text-muted-foreground': !isTaken,
+                        'text-muted-foreground/80': isTaken,
                     })}>
                       <Pill size={14} />
                       <span>
