@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import PillPalLogo from '@/components/icons/PillPalLogo';
-import { Package, Circle } from 'lucide-react';
+import { Package, Circle, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -35,6 +35,18 @@ const Header = () => {
           </Link>
           <div className="flex items-center gap-2">
             <TooltipProvider>
+               <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link href="/reminders" aria-label="Reminders">
+                    <Button variant="ghost" size="icon" className="hover:text-primary">
+                      <Bell className="h-6 w-6" />
+                    </Button>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                   <p>Reminders</p>
+                </TooltipContent>
+              </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link href="/inventory" aria-label="My Medicines">
