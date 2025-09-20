@@ -1,3 +1,10 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "pill-bottle-1",
+      "description": "A generic white pill bottle",
+      "imageUrl": "https://picsum.photos/seed/pillbottle/400/400",
+      "imageHint": "pill bottle"
+    }
+  ]
 }
