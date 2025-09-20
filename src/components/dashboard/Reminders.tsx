@@ -1,12 +1,80 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useMedicineStore } from '@/hooks/use-medicine-store';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Bell, ClipboardList } from 'lucide-react';
+import { Bell, ClipboardList, Sun, Moon, Sunset, Pill } from 'lucide-react';
+import type { DailyReminder } from '@/lib/types';
+
+const TimeSlot = ({
+  title,
+  icon,
+  reminders,
+  onTakeDose,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  reminders: DailyReminder[];
+  onTakeDose: (id: string) => void;
+}) => {
+  if (reminders.length === 0) return null;
+
+  return (
+    <div>
+      <h3 className="flex items-center gap-2 font-semibold text-muted-foreground mb-2">
+        {icon}
+        <span>{title}</span>
+      </h3>
+      <div className="space-y-2">
+        {reminders.map((reminder) => (
+          <div
+            key={reminder.id}
+            className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${
+              reminder.taken ? 'bg-secondary/50 text-muted-foreground' : 'bg-secondary'
+            }`}
+          >
+            <Checkbox
+              id={reminder.id}
+              checked={reminder.taken}
+              onCheckedChange={() => !reminder.taken && onTakeDose(reminder.id)}
+              aria-label={`Mark ${reminder.medicineName} as taken`}
+              className="w-6 h-6"
+            />
+            <div className="flex-grow">
+              <label
+                htmlFor={reminder.id}
+                className={`font-semibold text-base ${
+                  reminder.taken ? 'line-through' : ''
+                }`}
+              >
+                {reminder.medicineName}
+              </label>
+              <p className={`text-sm flex items-center gap-1.5 ${reminder.taken ? 'text-muted-foreground/80' : 'text-muted-foreground'}`}>
+                <Pill size={14} />
+                <span>
+                  Take {reminder.dosage}
+                </span>
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 
 const Reminders = () => {
   const { dailyReminders, takeDose } = useMedicineStore();
+  
+  const remindersByTime = useMemo(() => {
+    const morning = dailyReminders.filter(r => r.time === 'Morning');
+    const afternoon = dailyReminders.filter(r => r.time === 'Afternoon');
+    const night = dailyReminders.filter(r => r.time === 'Night');
+    return { morning, afternoon, night };
+  }, [dailyReminders]);
+
 
   if (dailyReminders.length === 0) {
     return (
@@ -37,45 +105,25 @@ const Reminders = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {dailyReminders.map((reminder) => (
-            <div
-              key={reminder.id}
-              className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${
-                reminder.taken ? 'bg-secondary/50 text-muted-foreground' : 'bg-secondary'
-              }`}
-            >
-              <Checkbox
-                id={reminder.id}
-                checked={reminder.taken}
-                onCheckedChange={() => !reminder.taken && takeDose(reminder.id)}
-                aria-label={`Mark ${reminder.medicineName} as taken`}
-                className="w-6 h-6"
-              />
-              <div className="flex-grow">
-                <label
-                  htmlFor={reminder.id}
-                  className={`font-semibold text-base ${
-                    reminder.taken ? 'line-through' : ''
-                  }`}
-                >
-                  {reminder.medicineName}
-                </label>
-                <p className={`text-sm ${reminder.taken ? 'text-muted-foreground/80' : 'text-muted-foreground'}`}>
-                  {reminder.dosage}
-                </p>
-              </div>
-              <div className="text-right">
-                <p
-                  className={`font-bold text-lg ${
-                    reminder.taken ? '' : 'text-accent'
-                  }`}
-                >
-                  {reminder.time}
-                </p>
-              </div>
-            </div>
-          ))}
+        <div className="space-y-6">
+          <TimeSlot
+            title="Morning"
+            icon={<Sun size={18} />}
+            reminders={remindersByTime.morning}
+            onTakeDose={takeDose}
+          />
+          <TimeSlot
+            title="Afternoon"
+            icon={<Sunset size={18} />}
+            reminders={remindersByTime.afternoon}
+            onTakeDose={takeDose}
+          />
+          <TimeSlot
+            title="Night"
+            icon={<Moon size={18} />}
+            reminders={remindersByTime.night}
+            onTakeDose={takeDose}
+          />
         </div>
       </CardContent>
     </Card>

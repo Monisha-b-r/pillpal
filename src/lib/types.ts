@@ -8,12 +8,18 @@ export interface Medicine {
   quantity: number;
 }
 
+export interface Dosage {
+  morning: string;
+  afternoon: string;
+  night: string;
+}
+
 export interface DailyReminder {
   id: string;
   medicineId: string;
   medicineName: string;
   dosage: string;
-  time: string;
+  time: 'Morning' | 'Afternoon' | 'Night';
   taken: boolean;
 }
 

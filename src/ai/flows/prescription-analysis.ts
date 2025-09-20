@@ -24,8 +24,8 @@ const AnalyzePrescriptionOutputSchema = z.object({
   medicines: z.array(
     z.object({
       name: z.string().describe('The name of the medicine.'),
-      dosage: z.string().describe('The dosage of the medicine.'),
-      timing: z.string().describe('The timing of the medicine intake.'),
+      dosage: z.string().describe('The overall dosage of the medicine (e.g., "40mg", "500mg").'),
+      timing: z.string().describe('The timing of the medicine intake as a "morning-afternoon-night" schedule (e.g., "1-0-1", "0.5-0-1").'),
     })
   ).describe('A list of medicines found in the prescription.'),
 });
@@ -41,14 +41,15 @@ const prompt = ai.definePrompt({
   output: {schema: AnalyzePrescriptionOutputSchema},
   prompt: `You are an expert pharmacist. You will analyze the prescription image and extract the medicines, dosages, and timing for each medicine.
 
-Some prescriptions use a notation like "0-0-1" or "1-0-1" to indicate timing. This format corresponds to "Morning-Afternoon-Night".
-For example:
+The timing must be in a "morning-afternoon-night" format. For example:
 - "0-0-1" means one dose at night.
 - "1-0-0" means one dose in the morning.
 - "1-0-1" means one dose in the morning and one dose at night.
 - "1-1-1" means one dose in the morning, one in the afternoon, and one at night.
+- "0.5-0-0" means half a dose in the morning.
 
-Convert this notation into a human-readable timing instruction (e.g., "Once at night", "Once in the morning", "Morning and night").
+Extract the overall dosage strength (e.g., "40mg", "500mg") into the 'dosage' field.
+The timing field should only contain the schedule string (e.g., "1-0-1").
 
 Analyze the following prescription image:
 
