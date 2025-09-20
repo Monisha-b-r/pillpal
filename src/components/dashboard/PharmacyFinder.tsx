@@ -5,70 +5,38 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { MapPin, Globe, Loader2, AlertTriangle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-
-interface Pharmacy {
-  name: string;
-  distance: string;
-  lat: number;
-  lng: number;
-}
-
-const allPharmacies: Omit<Pharmacy, 'distance'>[] = [
-  { name: 'Community Pharmacy', lat: 34.0522, lng: -118.2437 },
-  { name: 'Wellness Drug Store', lat: 34.055, lng: -118.25 },
-  { name: 'HealthFirst Meds', lat: 34.049, lng: -118.24 },
-  { name: 'The Corner Drugstore', lat: 34.06, lng: -118.23 },
-  { name: 'City Health Pharmacy', lat: 34.045, lng: -118.255 },
-];
+import { getNearbyPharmacies, Pharmacy } from '@/services/pharmacy-service';
 
 const onlineOptions = [
     { name: 'Capsule' },
     { name: 'Amazon Pharmacy' },
 ];
 
-// Haversine formula to calculate distance
-const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-  const R = 6371; // Radius of the earth in km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const d = R * c; // Distance in km
-  return d;
-};
-
-
 const PharmacyFinder = () => {
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
-  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchPharmacies = async (coords: GeolocationCoordinates) => {
+        try {
+            const center = { latitude: coords.latitude, longitude: coords.longitude };
+            setUserLocation(center);
+            const nearby = await getNearbyPharmacies(center, 10); // 10km radius
+            setPharmacies(nearby);
+        } catch (e) {
+            console.error(e);
+            setError('Could not fetch pharmacy data. Make sure you have pharmacies in your database.');
+        } finally {
+            setLoading(false);
+        }
+    }
+
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
-          const location = { lat: latitude, lng: longitude };
-          setUserLocation(location);
-
-          const pharmaciesWithDistance = allPharmacies
-          .map(p => {
-            const distanceInKm = getDistance(location.lat, location.lng, p.lat, p.lng);
-            return {
-              ...p,
-              distance: distanceInKm.toFixed(1),
-              distanceKm: distanceInKm,
-            };
-          })
-          .sort((a, b) => a.distanceKm - b.distanceKm)
-          .map(p => ({...p, distance: `${p.distance} km away`}));
-
-          setPharmacies(pharmaciesWithDistance);
-          setLoading(false);
+          fetchPharmacies(position.coords);
         },
         (err) => {
           setError('Could not get your location. Please enable location services.');
@@ -84,7 +52,7 @@ const PharmacyFinder = () => {
 
   const openDirections = (pharmacy: Pharmacy) => {
     if (userLocation) {
-      const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${pharmacy.lat},${pharmacy.lng}`;
+      const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${pharmacy.coordinates.latitude},${pharmacy.coordinates.longitude}`;
       window.open(url, '_blank');
     }
   };
@@ -109,18 +77,23 @@ const PharmacyFinder = () => {
               </div>
             )}
             {error && (
-              <div className="flex items-center justify-center p-4 text-destructive">
+              <div className="flex items-center justify-center p-4 text-destructive text-center">
                 <AlertTriangle className="mr-2" />
                 <span>{error}</span>
               </div>
             )}
-            {!loading && !error && (
+            {!loading && !error && pharmacies.length === 0 && (
+                 <div className="flex items-center justify-center p-4 text-muted-foreground text-center">
+                    <span>No pharmacies found within 10km.</span>
+                </div>
+            )}
+            {!loading && !error && pharmacies.length > 0 && (
               <div className="space-y-2">
-              {pharmacies.slice(0,3).map((pharmacy) => (
-                  <div key={pharmacy.name} className="flex justify-between items-center p-2 bg-secondary/50 rounded-md">
+              {pharmacies.map((pharmacy) => (
+                  <div key={pharmacy.id} className="flex justify-between items-center p-2 bg-secondary/50 rounded-md">
                   <div>
                       <p className="font-semibold text-sm">{pharmacy.name}</p>
-                      <p className="text-xs text-muted-foreground">{pharmacy.distance}</p>
+                      <p className="text-xs text-muted-foreground">{pharmacy.distance.toFixed(1)} km away</p>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => openDirections(pharmacy)}>Directions</Button>
                   </div>

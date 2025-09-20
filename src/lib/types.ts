@@ -1,3 +1,5 @@
+import type { GeoPoint } from 'firebase/firestore';
+
 export interface Medicine {
   id: string;
   name: string;
@@ -16,3 +18,10 @@ export interface DailyReminder {
 }
 
 export type StockStatus = 'high' | 'medium' | 'low' | 'empty';
+
+export interface Pharmacy {
+    id: string;
+    name: string;
+    distance: number;
+    coordinates: GeoPoint;
+}
