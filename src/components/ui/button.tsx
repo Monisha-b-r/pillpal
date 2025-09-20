@@ -41,17 +41,7 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const [isMounted, setIsMounted] = React.useState(false);
-    React.useEffect(() => {
-      setIsMounted(true);
-    }, []);
-
     const Comp = asChild ? Slot : "button"
-
-    if (asChild && !isMounted) {
-      return null;
-    }
-    
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
