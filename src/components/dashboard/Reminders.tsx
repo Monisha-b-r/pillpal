@@ -1,12 +1,95 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useMedicineStore } from '@/hooks/use-medicine-store';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Bell, ClipboardList, Sun, Moon, Sunset, Pill, CheckCircle2, Check } from 'lucide-react';
+import { Bell, ClipboardList, Sun, Moon, Sunset, Pill, CheckCircle2 } from 'lucide-react';
 import type { DailyReminder } from '@/lib/types';
 import { cn } from '@/lib/utils';
+
+const ReminderItem = ({ reminder, onTakeDose }: { reminder: DailyReminder; onTakeDose: (id: string) => void }) => {
+  const [isTaken, setIsTaken] = useState(reminder.taken);
+  const [isRecentlyTaken, setIsRecentlyTaken] = useState(false);
+  const [isHiding, setIsHiding] = useState(false);
+
+  useEffect(() => {
+    setIsTaken(reminder.taken);
+  }, [reminder.taken]);
+
+  const handleTakeDose = () => {
+    if (!isTaken) {
+      onTakeDose(reminder.id);
+      setIsTaken(true);
+      setIsRecentlyTaken(true);
+
+      const hideTimer = setTimeout(() => {
+        setIsHiding(true);
+      }, 2000); // Start hiding after 2 seconds
+
+      const recentTimer = setTimeout(() => {
+        setIsRecentlyTaken(false);
+      }, 2000);
+
+      return () => {
+        clearTimeout(hideTimer);
+        clearTimeout(recentTimer);
+      };
+    }
+  };
+
+  const showReminder = !isTaken || isRecentlyTaken;
+
+  if (!showReminder && isHiding) {
+    // This allows the hide animation to complete
+    return null;
+  }
+  
+  const isAnimatingOut = isTaken && !isRecentlyTaken;
+
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-4 p-3 rounded-lg transition-all duration-300 overflow-hidden',
+        {
+          'bg-secondary': !isRecentlyTaken,
+          'bg-primary text-primary-foreground': isRecentlyTaken,
+          'max-h-0 !p-0 !m-0 opacity-0': isAnimatingOut,
+          'max-h-20': !isAnimatingOut,
+        }
+      )}
+    >
+      {isRecentlyTaken ? (
+        <div className="flex-grow flex justify-between items-center">
+            <span className="font-semibold text-base">Dose taken!</span>
+            <div className="bg-white text-primary font-semibold px-3 py-1 rounded-md">
+                <CheckCircle2 size={16} />
+            </div>
+        </div>
+      ) : (
+        <>
+          <Checkbox
+            id={reminder.id}
+            checked={isTaken}
+            onCheckedChange={handleTakeDose}
+            aria-label={`Mark ${reminder.medicineName} as taken`}
+            className={cn('w-6 h-6')}
+          />
+          <div className="flex-grow">
+            <label htmlFor={reminder.id} className={cn('font-semibold text-base')}>
+              {reminder.medicineName}
+            </label>
+            <p className={cn('text-sm flex items-center gap-1.5 text-muted-foreground')}>
+              <Pill size={14} />
+              <span>Take {reminder.dosage}</span>
+            </p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 
 const TimeSlot = ({
   title,
@@ -19,11 +102,7 @@ const TimeSlot = ({
   reminders: DailyReminder[];
   onTakeDose: (id: string) => void;
 }) => {
-  
-  const sortedReminders = useMemo(() => {
-    // Sorts reminders to show not-taken ones first, then taken ones
-    return [...reminders].sort((a, b) => (a.taken ? 1 : 0) - (b.taken ? 1 : 0) || a.medicineName.localeCompare(b.medicineName));
-  }, [reminders]);
+  const activeReminders = useMemo(() => reminders.filter(r => !r.taken), [reminders]);
 
   if (reminders.length === 0) return null;
 
@@ -34,54 +113,15 @@ const TimeSlot = ({
         <span>{title}</span>
       </h3>
       <div className="space-y-2">
-        {sortedReminders.map((reminder) => {
-          const isTaken = reminder.taken;
-
-          return (
-            <div
-              key={reminder.id}
-              className={cn(
-                'flex items-center gap-4 p-3 rounded-lg transition-all duration-300',
-                {
-                  'bg-secondary': !isTaken,
-                  'bg-primary text-primary-foreground': isTaken,
-                }
-              )}
-            >
-              <Checkbox
-                id={reminder.id}
-                checked={isTaken}
-                onCheckedChange={() => !isTaken && onTakeDose(reminder.id)}
-                aria-label={`Mark ${reminder.medicineName} as taken`}
-                className={cn('w-6 h-6', {
-                    'border-primary-foreground/50 data-[state=checked]:bg-primary-foreground data-[state=checked]:text-primary': isTaken
-                })}
-              />
-              <div className="flex-grow">
-                <label
-                  htmlFor={reminder.id}
-                  className={cn('font-semibold text-base', {
-                    'line-through opacity-70': isTaken,
-                  })}
-                >
-                  {reminder.medicineName}
-                </label>
-                <p className={cn('text-sm flex items-center gap-1.5', {
-                    'text-muted-foreground': !isTaken,
-                    'text-primary-foreground/80': isTaken,
-                })}>
-                  <Pill size={14} />
-                  <span>
-                    Take {reminder.dosage}
-                  </span>
-                </p>
-              </div>
-              {isTaken && (
-                <Check className="h-6 w-6 text-primary-foreground" />
-              )}
+        {reminders.map((reminder) => (
+          <ReminderItem key={reminder.id} reminder={reminder} onTakeDose={onTakeDose} />
+        ))}
+        {activeReminders.length === 0 && (
+           <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 text-muted-foreground text-sm">
+                <CheckCircle2 className="text-green-500" size={16} />
+                <span>All {title.toLowerCase()} doses taken.</span>
             </div>
-          );
-        })}
+        )}
       </div>
     </div>
   );
