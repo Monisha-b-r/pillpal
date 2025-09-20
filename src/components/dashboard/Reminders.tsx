@@ -4,8 +4,9 @@ import { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useMedicineStore } from '@/hooks/use-medicine-store';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Bell, ClipboardList, Sun, Moon, Sunset, Pill } from 'lucide-react';
+import { Bell, ClipboardList, Sun, Moon, Sunset, Pill, CheckCircle2 } from 'lucide-react';
 import type { DailyReminder } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 const TimeSlot = ({
   title,
@@ -18,6 +19,10 @@ const TimeSlot = ({
   reminders: DailyReminder[];
   onTakeDose: (id: string) => void;
 }) => {
+  const sortedReminders = useMemo(() => {
+    return [...reminders].sort((a, b) => (a.taken ? 1 : -1) - (b.taken ? 1 : -1));
+  }, [reminders]);
+
   if (reminders.length === 0) return null;
 
   return (
@@ -27,12 +32,23 @@ const TimeSlot = ({
         <span>{title}</span>
       </h3>
       <div className="space-y-2">
-        {reminders.map((reminder) => (
+        {sortedReminders.map((reminder) => (
           <div
             key={reminder.id}
-            className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${
-              reminder.taken ? 'bg-secondary/50 text-muted-foreground' : 'bg-secondary'
-            }`}
+            className={cn(
+              'flex items-center gap-4 p-3 rounded-lg transition-all duration-500',
+              {
+                'bg-secondary': !reminder.taken,
+                'bg-secondary/50 text-muted-foreground opacity-50': reminder.taken,
+              }
+            )}
+            style={{
+              maxHeight: reminder.taken ? '0' : '100px',
+              paddingTop: reminder.taken ? '0' : '',
+              paddingBottom: reminder.taken ? '0' : '',
+              marginBottom: reminder.taken ? '0' : '',
+              overflow: 'hidden',
+            }}
           >
             <Checkbox
               id={reminder.id}
@@ -44,13 +60,16 @@ const TimeSlot = ({
             <div className="flex-grow">
               <label
                 htmlFor={reminder.id}
-                className={`font-semibold text-base ${
-                  reminder.taken ? 'line-through' : ''
-                }`}
+                className={cn('font-semibold text-base', {
+                  'line-through': reminder.taken,
+                })}
               >
                 {reminder.medicineName}
               </label>
-              <p className={`text-sm flex items-center gap-1.5 ${reminder.taken ? 'text-muted-foreground/80' : 'text-muted-foreground'}`}>
+              <p className={cn('text-sm flex items-center gap-1.5', {
+                  'text-muted-foreground': !reminder.taken,
+                  'text-muted-foreground/80': reminder.taken,
+              })}>
                 <Pill size={14} />
                 <span>
                   Take {reminder.dosage}
@@ -68,11 +87,12 @@ const TimeSlot = ({
 const Reminders = () => {
   const { dailyReminders, takeDose } = useMedicineStore();
   
-  const remindersByTime = useMemo(() => {
+  const { remindersByTime, allTaken } = useMemo(() => {
     const morning = dailyReminders.filter(r => r.time === 'Morning');
     const afternoon = dailyReminders.filter(r => r.time === 'Afternoon');
     const night = dailyReminders.filter(r => r.time === 'Night');
-    return { morning, afternoon, night };
+    const allTaken = dailyReminders.length > 0 && dailyReminders.every(r => r.taken);
+    return { remindersByTime: { morning, afternoon, night }, allTaken };
   }, [dailyReminders]);
 
 
@@ -105,26 +125,34 @@ const Reminders = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
-          <TimeSlot
-            title="Morning"
-            icon={<Sun size={18} />}
-            reminders={remindersByTime.morning}
-            onTakeDose={takeDose}
-          />
-          <TimeSlot
-            title="Afternoon"
-            icon={<Sunset size={18} />}
-            reminders={remindersByTime.afternoon}
-            onTakeDose={takeDose}
-          />
-          <TimeSlot
-            title="Night"
-            icon={<Moon size={18} />}
-            reminders={remindersByTime.night}
-            onTakeDose={takeDose}
-          />
-        </div>
+        {allTaken ? (
+          <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
+            <CheckCircle2 className="w-16 h-16 mb-4 text-green-500" />
+            <p className="font-semibold text-lg">All doses completed for today!</p>
+            <p className="text-sm">Great job staying on track.</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <TimeSlot
+              title="Morning"
+              icon={<Sun size={18} />}
+              reminders={remindersByTime.morning}
+              onTakeDose={takeDose}
+            />
+            <TimeSlot
+              title="Afternoon"
+              icon={<Sunset size={18} />}
+              reminders={remindersByTime.afternoon}
+              onTakeDose={takeDose}
+            />
+            <TimeSlot
+              title="Night"
+              icon={<Moon size={18} />}
+              reminders={remindersByTime.night}
+              onTakeDose={takeDose}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
