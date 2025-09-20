@@ -41,6 +41,15 @@ const prompt = ai.definePrompt({
   output: {schema: AnalyzePrescriptionOutputSchema},
   prompt: `You are an expert pharmacist. You will analyze the prescription image and extract the medicines, dosages, and timing for each medicine.
 
+Some prescriptions use a notation like "0-0-1" or "1-0-1" to indicate timing. This format corresponds to "Morning-Afternoon-Night".
+For example:
+- "0-0-1" means one dose at night.
+- "1-0-0" means one dose in the morning.
+- "1-0-1" means one dose in the morning and one dose at night.
+- "1-1-1" means one dose in the morning, one in the afternoon, and one at night.
+
+Convert this notation into a human-readable timing instruction (e.g., "Once at night", "Once in the morning", "Morning and night").
+
 Analyze the following prescription image:
 
 {{media url=prescriptionImage}}
